@@ -48,7 +48,7 @@ func Dial(cfg ConnectSpec) (Dialer, error) {
 func DialWithContext(ctx context.Context, cfg ConnectSpec) (d Dialer, err error) {
 	cfg = cfg.WithDefaults()
 	if len(cfg.Addresses) == 0 {
-		return nil, fmt.Errorf("Nothing to connect, addresses list it empty")
+		return nil, fmt.Errorf(`Nothing to connect, addresses list it empty`)
 	}
 
 	wg := sync.WaitGroup{}
@@ -63,7 +63,7 @@ func DialWithContext(ctx context.Context, cfg ConnectSpec) (d Dialer, err error)
 	for _, addr := range cfg.Addresses {
 		select {
 		case <-ctxExternal.Done():
-			return
+			return d, ctxExternal.Err()
 		default:
 		}
 
@@ -75,12 +75,12 @@ func DialWithContext(ctx context.Context, cfg ConnectSpec) (d Dialer, err error)
 				cancelInternal()
 			}()
 			dialer := cfg.NewDialer()
-			cfg.LogInfo(fmt.Sprintf("Opening \"%s\": ...", addr))
+			cfg.LogInfo(fmt.Sprintf(`Dialing "%s": ...`, addr))
 			if err = dialer.Dial(ctx, addr); err != nil {
-				cfg.LogErr(fmt.Sprintf("Dial \"%s\" failed: %v", addr, err))
+				cfg.LogErr(fmt.Sprintf(`Dial "%s" failed: %v`, addr, err))
 				return
 			}
-			cfg.LogInfo(fmt.Sprintf("Dial \"%s\" successful: returning", addr))
+			cfg.LogInfo(fmt.Sprintf(`Dial "%s" successful: returning`, addr))
 			d = dialer
 			cancelExternal()
 		}(addr)
